@@ -1,25 +1,10 @@
-import { OpenAI } from 'openai';
+import { LLM_PROVIDER } from '../llm_provider.js';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-/**
- * @param {import("@slack/web-api").ChatStreamer} streamer
- * @param {any[]} prompts
- */
-export async function callLLM(streamer, prompts) {
-  const response = await openai.responses.create({
-    model: 'gpt-4o-mini',
-    input: prompts,
-    stream: true,
-  });
-
-  for await (const event of response) {
-    if (event.type === 'response.output_text.delta' && event.delta) {
-      await streamer.append({
-        markdown_text: event.delta,
-      });
-    }
-  }
+let callLLM;
+if (LLM_PROVIDER === 'anthropic') {
+  ({ callLLM } = await import('./llm-caller-anthropic.js'));
+} else {
+  ({ callLLM } = await import('./llm-caller-openai.js'));
 }
+
+export { callLLM };
