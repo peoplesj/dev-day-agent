@@ -77,6 +77,11 @@ export const message = async ({ client, context, logger, message, say, setStatus
             elements: [
               {
                 type: 'button',
+                text: { type: 'plain_text', text: 'All' },
+                action_id: 'access_account_all',
+              },
+              {
+                type: 'button',
                 text: { type: 'plain_text', text: 'Production' },
                 action_id: 'access_account_production',
               },
@@ -149,6 +154,11 @@ export const message = async ({ client, context, logger, message, say, setStatus
             elements: [
               {
                 type: 'button',
+                text: { type: 'plain_text', text: 'All' },
+                action_id: 'access_resource_all',
+              },
+              {
+                type: 'button',
                 text: { type: 'plain_text', text: 'EC2' },
                 action_id: 'access_resource_ec2',
               },
@@ -160,7 +170,6 @@ export const message = async ({ client, context, logger, message, say, setStatus
               {
                 type: 'button',
                 text: { type: 'plain_text', text: 'IAM' },
-                
                 action_id: 'access_resource_iam',
               },
             ],
