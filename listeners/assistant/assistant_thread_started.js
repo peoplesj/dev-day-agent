@@ -35,21 +35,23 @@ export const assistantThreadStarted = async ({ event, logger, say, setSuggestedP
      *
      * @see {@link https://docs.slack.dev/reference/methods/assistant.threads.setSuggestedPrompts}
      */
-    if (!context.channel_id) {
-      await setSuggestedPrompts({
-        title: 'Start with this suggested prompt:',
-        prompts: [
-          {
-            title: 'Prompt a task with thinking steps',
-            message: 'Wonder a few deep thoughts.',
-          },
-          {
-            title: 'Roll dice for a random number',
-            message: 'Roll two 12-sided dice and three 6-sided dice for a pseudo-random score.',
-          },
-        ],
-      });
-    }
+    await setSuggestedPrompts({
+      title: 'Start with this suggested prompt:',
+      prompts: [
+        {
+          title: 'Prompt a task with thinking steps',
+          message: 'Wonder a few deep thoughts.',
+        },
+        {
+          title: 'Reset my password',
+          message: 'I lost the sticky note that had my password written down. Help!',
+        },
+        {
+          title: 'Request Access',
+          message: 'I need to request AWS access for my project.',
+        },
+      ],
+    });
   } catch (e) {
     logger.error(e);
   }

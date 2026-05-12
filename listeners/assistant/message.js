@@ -18,7 +18,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
  *
  * @see {@link https://docs.slack.dev/reference/events/message}
  */
-export const message = async ({ client, context, logger, message, say, setStatus }) => {
+export const message = async ({ client, context, logger, message, say, setStatus, getThreadContext }) => {
   /**
    * Messages sent to the Assistant can have a specific message subtype.
    *
@@ -35,8 +35,139 @@ export const message = async ({ client, context, logger, message, say, setStatus
     const { channel, thread_ts } = message;
     const { userId, teamId } = context;
 
-    // The first example shows a message with thinking steps that has different chunks to construct and update a plan alongside text outputs.
-    if (message.text === 'Wonder a few deep thoughts.') {
+    if (message.text === 'I lost the sticky note that had my password written down. Help!') {
+      await setStatus({ status: 'looking into it...' });
+
+      await sleep(2000);
+
+      const streamer = client.chatStream({
+        channel: channel,
+        recipient_team_id: teamId,
+        recipient_user_id: userId,
+        thread_ts: thread_ts,
+      });
+
+      await streamer.stop({
+        chunks: [
+          {
+            type: 'markdown_text',
+            text: "No worries—we've got you. I can trigger a password reset that will send a link to your registered email.\n\nPlease share:\n• Your account username or email\n• Which service this is for (e.g., VPN, email, Jira, etc.)\n\nOnce I have that, I'll send the reset link. After you get it, follow the instructions to set a new password (preferably a strong, unique one) and enable 2FA if available 🔐. If you can't access your registered email, tell me and we'll figure out the next step.",
+          },
+        ],
+        blocks: [feedbackBlock],
+      });
+    } else if (message.text.includes('AWS') && message.text.includes('access')) {
+      await setStatus({ status: 'setting up access request...' });
+
+      // Message 1: Which AWS account?
+      await client.chat.postMessage({
+        channel: channel,
+        thread_ts: thread_ts,
+        text: 'Which AWS account do you need access to?',
+        blocks: [
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: 'Which AWS account do you need access to?',
+            },
+          },
+          {
+            type: 'actions',
+            elements: [
+              {
+                type: 'button',
+                text: { type: 'plain_text', text: 'Production' },
+                action_id: 'access_account_production',
+              },
+              {
+                type: 'button',
+                text: { type: 'plain_text', text: 'Staging' },
+                action_id: 'access_account_staging',
+              },
+              {
+                type: 'button',
+                text: { type: 'plain_text', text: 'Development' },
+                action_id: 'access_account_development',
+              },
+            ],
+          },
+        ],
+      });
+
+      // Message 2: What access level?
+      await client.chat.postMessage({
+        channel: channel,
+        thread_ts: thread_ts,
+        text: 'What access level do you need?',
+        blocks: [
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: 'What access level do you need?',
+            },
+          },
+          {
+            type: 'actions',
+            elements: [
+              {
+                type: 'button',
+                text: { type: 'plain_text', text: 'Read-Only' },
+                action_id: 'access_level_readonly',
+              },
+              {
+                type: 'button',
+                text: { type: 'plain_text', text: 'Developer' },
+                action_id: 'access_level_developer',
+              },
+              {
+                type: 'button',
+                text: { type: 'plain_text', text: 'Admin' },
+                action_id: 'access_level_admin',
+              },
+            ],
+          },
+        ],
+      });
+
+      // Message 3: Which resources/services?
+      await client.chat.postMessage({
+        channel: channel,
+        thread_ts: thread_ts,
+        text: 'Which resources/services do you need?',
+        blocks: [
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: 'Which resources/services do you need?',
+            },
+          },
+          {
+            type: 'actions',
+            elements: [
+              {
+                type: 'button',
+                text: { type: 'plain_text', text: 'EC2' },
+                action_id: 'access_resource_ec2',
+              },
+              {
+                type: 'button',
+                text: { type: 'plain_text', text: 'S3' },
+                action_id: 'access_resource_s3',
+              },
+              {
+                type: 'button',
+                text: { type: 'plain_text', text: 'IAM' },
+                
+                action_id: 'access_resource_iam',
+              },
+            ],
+          },
+        ],
+      });
+    } else if (message.text === 'Wonder a few deep thoughts.') {
       await setStatus({
         status: 'thinking...',
         loading_messages: [
@@ -109,7 +240,7 @@ export const message = async ({ client, context, logger, message, say, setStatus
         ],
       });
 
-      await sleep(4000);
+      await sleep(5500);
 
       await streamer.stop({
         chunks: [
