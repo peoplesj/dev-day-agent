@@ -18,6 +18,40 @@ export const appMentionCallback = async ({ event, client, logger, say }) => {
     const { channel, text, team, user } = event;
     const thread_ts = event.thread_ts || event.ts;
 
+    if (text.toLowerCase().includes('merge')) {
+      await client.chat.postEphemeral({
+        channel,
+        user,
+        blocks: [
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: "It looks like you're trying to merge a PR. Which action would you like to take?",
+            },
+          },
+          {
+            type: 'actions',
+            elements: [
+              {
+                type: 'button',
+                text: { type: 'plain_text', text: 'Create a PR' },
+                action_id: 'create_pr_action',
+                style: 'primary',
+              },
+              {
+                type: 'button',
+                text: { type: 'plain_text', text: 'View Session' },
+                action_id: 'view_session_action',
+              },
+            ],
+          },
+        ],
+        text: "It looks like you're trying to merge a PR.",
+      });
+      return;
+    }
+
     await client.assistant.threads.setStatus({
       channel_id: channel,
       thread_ts: thread_ts,
