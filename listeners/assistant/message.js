@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { callLLM } from '../../agent/llm-caller.js';
 import { feedbackBlock } from '../views/feedback_block.js';
 
@@ -271,6 +272,32 @@ export const message = async ({ client, context, logger, message, say, setStatus
         ],
         blocks: [feedbackBlock],
       });
+    } else if (message.text.toLowerCase().match(/personal\s*(laptop|device|computer)/)) {
+      await setStatus({ status: 'checking IT policy...' });
+
+      const policy = readFileSync('./knowledge/policies/personal-device-usage.md', 'utf-8');
+
+      const streamer = client.chatStream({
+        channel: channel,
+        recipient_team_id: teamId,
+        recipient_user_id: userId,
+        thread_ts: thread_ts,
+        task_display_mode: 'timeline',
+      });
+
+      const prompts = [
+        {
+          role: 'system',
+          content: `You are an IT support agent at Pronto. Answer the employee's question using ONLY the following internal policy document. Be helpful and concise.\n\n${policy}`,
+        },
+        {
+          role: 'user',
+          content: message.text,
+        },
+      ];
+
+      await callLLM(streamer, prompts);
+      await streamer.stop({ blocks: [feedbackBlock] });
     } else {
       // This second example shows a generated text response for the provided prompt
       await setStatus({
