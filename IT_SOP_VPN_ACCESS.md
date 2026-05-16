@@ -8,7 +8,7 @@
 
 ## Scope
 
-This SOP covers VPN access provisioning, troubleshooting, and offboarding for all Acme Corp employees.
+This SOP covers VPN access provisioning, troubleshooting, and offboarding for all Pronto employees.
 
 ---
 
@@ -16,7 +16,7 @@ This SOP covers VPN access provisioning, troubleshooting, and offboarding for al
 
 - Client: Cisco AnyConnect
 - Minimum version: v4.10.08
-- Server: vpn.acme.corp
+- Server: vpn.pronto.corp
 
 ---
 
@@ -25,7 +25,7 @@ This SOP covers VPN access provisioning, troubleshooting, and offboarding for al
 1. Submit an IT access request via the #help-it channel or IT portal
 2. IT provisions credentials within 1 business day
 3. Employee installs AnyConnect from Self Service
-4. Employee connects to vpn.acme.corp using SSO credentials
+4. Employee connects to vpn.pronto.corp using SSO credentials
 
 ---
 
@@ -52,4 +52,4 @@ VPN access is revoked automatically within 24 hours of account deactivation. No 
 
 ## Escalation
 
-Unresolved issues after following this SOP → open a ticket in #help-it or contact it-ops@acme.corp.
+Unresolved issues after following this SOP → open a ticket in #help-it or contact it-ops@pronto.corp.

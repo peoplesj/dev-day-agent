@@ -20,7 +20,7 @@ export const confirmGithubAccessCallback = async ({ ack, body, client, context }
       {
         type: 'section',
         fields: [
-          { type: 'mrkdwn', text: '*Org:*\n`acme-corp`' },
+          { type: 'mrkdwn', text: '*Org:*\n`pronto`' },
           { type: 'mrkdwn', text: '*Role:*\nWrite' },
           { type: 'mrkdwn', text: '*Team:*\n`@platform-eng`' },
           { type: 'mrkdwn', text: '*Justification:*\nStandard access for new platform engineers' },
@@ -60,7 +60,7 @@ export const confirmGithubAccessCallback = async ({ ack, body, client, context }
 
   await streamer.stop({
     chunks: [
-      { type: 'markdown_text', text: ' ✓\n\n✅ **Access granted.** You can now access the GitHub `acme-corp` org.\n\nTry:\n```\ngit clone git@github.com:peoplesj/infra-access-bot.git\n```' },
+      { type: 'markdown_text', text: ' ✓\n\n✅ **Access granted.** You can now access the GitHub `pronto` org.\n\nTry:\n```\ngit clone git@github.com:peoplesj/infra-access-bot.git\n```' },
     ],
   });
 };

@@ -31,7 +31,7 @@ export async function vpnMessageCallback({ message, client, context }) {
 
   await streamer.append({
     chunks: [
-      { type: 'markdown_text', text: '### The 60-second fix\n\n1. **Quit AnyConnect completely** — ⌘+Q (don\'t just close the window)\n2. **Clear the cache:**\n```\nsudo rm -rf ~/Library/Application\\ Support/Cisco\n```\n3. **Reinstall from Self Service** — search "Cisco AnyConnect" and pick v4.10.08 or later\n4. **Reconnect** to `vpn.acme.corp`\n\n' },
+      { type: 'markdown_text', text: '### The 60-second fix\n\n1. **Quit AnyConnect completely** — ⌘+Q (don\'t just close the window)\n2. **Clear the cache:**\n```\nsudo rm -rf ~/Library/Application\\ Support/Cisco\n```\n3. **Reinstall from Self Service** — search "Cisco AnyConnect" and pick v4.10.08 or later\n4. **Reconnect** to `vpn.pronto.corp`\n\n' },
     ],
   });
 

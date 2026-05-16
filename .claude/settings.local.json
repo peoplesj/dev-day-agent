@@ -10,7 +10,15 @@
       "WebFetch(domain:docs.slack.dev)",
       "WebFetch(domain:slack.com)",
       "Bash(npm install *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(claude mcp *)",
+      "mcp__slack__slack_read_canvas",
+      "Bash(grep -E \"\\(^[^/]*\\\\.env|package\\\\.json|app\\\\.js$|^[^/]*index\\\\.js$\\)\")",
+      "Bash(find *)",
+      "Bash(grep *)",
+      "Bash(npm ls *)",
+      "WebFetch(domain:ts.sdk.modelcontextprotocol.io)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ]
   }
 }

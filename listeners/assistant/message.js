@@ -149,7 +149,7 @@ async function handleGithubAccessRequest({ client, channel, thread_ts, userId, t
       {
         type: 'section',
         fields: [
-          { type: 'mrkdwn', text: '*Org:*\n`acme-corp`' },
+          { type: 'mrkdwn', text: '*Org:*\n`pronto`' },
           { type: 'mrkdwn', text: '*Role:*\nWrite' },
           { type: 'mrkdwn', text: '*Team:*\n`@platform-eng`' },
           { type: 'mrkdwn', text: '*Justification:*\nStandard access for new platform engineers' },
