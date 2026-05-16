@@ -1,33 +1,9 @@
-import { readFileSync } from 'node:fs';
 import { callLLM } from '../../agent/llm-caller.js';
 import { feedbackBlock } from '../views/feedback_block.js';
 
-/** @param {number} ms */
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/**
- * Handles when users send messages or select a prompt in an assistant thread
- * and generate AI responses.
- *
- * @param {Object} params
- * @param {import("@slack/web-api").WebClient} params.client - Slack web client.
- * @param {import("@slack/bolt").Context} params.context - Event context.
- * @param {import("@slack/logger").Logger} params.logger - Logger instance.
- * @param {import("@slack/types").MessageEvent} params.message - The incoming message.
- * @param {import("@slack/bolt").SayFn} params.say - Function to send messages.
- * @param {Function} params.setStatus - Function to set assistant status.
- *
- * @see {@link https://docs.slack.dev/reference/events/message}
- */
 export const message = async ({ client, context, logger, message, say, setStatus, getThreadContext }) => {
-  /**
-   * Messages sent to the Assistant can have a specific message subtype.
-   *
-   * Here we check that the message has "text" and was sent to a thread to
-   * skip unexpected message subtypes.
-   *
-   * @see {@link https://docs.slack.dev/reference/events/message#subtypes}
-   */
   if (!('text' in message) || !('thread_ts' in message) || !message.text || !message.thread_ts) {
     return;
   }
@@ -36,192 +12,36 @@ export const message = async ({ client, context, logger, message, say, setStatus
     const { channel, thread_ts } = message;
     const { userId, teamId } = context;
 
-    if (message.text === 'I lost the sticky note that had my password written down. Help!') {
-      await setStatus({ status: 'looking into it...' });
-
-      await sleep(2000);
-
-      const streamer = client.chatStream({
-        channel: channel,
-        recipient_team_id: teamId,
-        recipient_user_id: userId,
-        thread_ts: thread_ts,
-      });
-
-      await streamer.stop({
-        chunks: [
-          {
-            type: 'markdown_text',
-            text: "No worries—we've got you. I can trigger a password reset that will send a link to your registered email.\n\nPlease share:\n• Your account username or email\n• Which service this is for (e.g., VPN, email, Jira, etc.)\n\nOnce I have that, I'll send the reset link. After you get it, follow the instructions to set a new password (preferably a strong, unique one) and enable 2FA if available 🔐. If you can't access your registered email, tell me and we'll figure out the next step.",
-          },
-        ],
-        blocks: [feedbackBlock],
-      });
-    } else if (message.text.includes('AWS') && message.text.includes('access')) {
-      await setStatus({ status: 'setting up access request...' });
-
-      // Message 1: Which AWS account?
-      await client.chat.postMessage({
-        channel: channel,
-        thread_ts: thread_ts,
-        text: 'Which AWS account do you need access to?',
-        blocks: [
-          {
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text: 'Which AWS account do you need access to?',
-            },
-          },
-          {
-            type: 'actions',
-            elements: [
-              {
-                type: 'button',
-                text: { type: 'plain_text', text: 'All' },
-                action_id: 'access_account_all',
-              },
-              {
-                type: 'button',
-                text: { type: 'plain_text', text: 'Production' },
-                action_id: 'access_account_production',
-              },
-              {
-                type: 'button',
-                text: { type: 'plain_text', text: 'Staging' },
-                action_id: 'access_account_staging',
-              },
-              {
-                type: 'button',
-                text: { type: 'plain_text', text: 'Development' },
-                action_id: 'access_account_development',
-              },
-            ],
-          },
-        ],
-      });
-
-      // Message 2: What access level?
-      await client.chat.postMessage({
-        channel: channel,
-        thread_ts: thread_ts,
-        text: 'What access level do you need?',
-        blocks: [
-          {
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text: 'What access level do you need?',
-            },
-          },
-          {
-            type: 'actions',
-            elements: [
-              {
-                type: 'button',
-                text: { type: 'plain_text', text: 'Read-Only' },
-                action_id: 'access_level_readonly',
-              },
-              {
-                type: 'button',
-                text: { type: 'plain_text', text: 'Developer' },
-                action_id: 'access_level_developer',
-              },
-              {
-                type: 'button',
-                text: { type: 'plain_text', text: 'Admin' },
-                action_id: 'access_level_admin',
-              },
-            ],
-          },
-        ],
-      });
-
-      // Message 3: Which resources/services?
-      await client.chat.postMessage({
-        channel: channel,
-        thread_ts: thread_ts,
-        text: 'Which resources/services do you need?',
-        blocks: [
-          {
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text: 'Which resources/services do you need?',
-            },
-          },
-          {
-            type: 'actions',
-            elements: [
-              {
-                type: 'button',
-                text: { type: 'plain_text', text: 'All' },
-                action_id: 'access_resource_all',
-              },
-              {
-                type: 'button',
-                text: { type: 'plain_text', text: 'EC2' },
-                action_id: 'access_resource_ec2',
-              },
-              {
-                type: 'button',
-                text: { type: 'plain_text', text: 'S3' },
-                action_id: 'access_resource_s3',
-              },
-              {
-                type: 'button',
-                text: { type: 'plain_text', text: 'IAM' },
-                action_id: 'access_resource_iam',
-              },
-            ],
-          },
-        ],
-      });
-    } else if (message.text === 'Wonder a few deep thoughts.') {
+    if (message.text.toLowerCase().includes('github access')) {
+      await handleGithubAccessRequest({ client, channel, thread_ts, userId, teamId, setStatus });
+    }
+    /* --- "Wonder deep thoughts" flow (commented out for keynote demo) ---
+    else if (message.text === 'Wonder a few deep thoughts.') {
       await setStatus({
         status: 'thinking...',
         loading_messages: [
           'Teaching the hamsters to type faster…',
           'Untangling the internet cables…',
           'Consulting the office goldfish…',
-          'Polishing up the response just for you…',
-          'Convincing the AI to stop overthinking…',
         ],
       });
 
       await sleep(4000);
 
       const streamer = client.chatStream({
-        channel: channel,
+        channel,
         recipient_team_id: teamId,
         recipient_user_id: userId,
-        thread_ts: thread_ts,
+        thread_ts,
         task_display_mode: 'plan',
       });
 
       await streamer.append({
         chunks: [
-          {
-            type: 'markdown_text',
-            text: 'Hello.\nI have received the task. ',
-          },
-          {
-            type: 'markdown_text',
-            text: 'This task appears manageable.\nThat is good.',
-          },
-          {
-            type: 'task_update',
-            id: '001',
-            title: 'Understanding the task...',
-            status: 'in_progress',
-            details: '- Identifying the goal\n- Identifying constraints',
-          },
-          {
-            type: 'task_update',
-            id: '002',
-            title: 'Performing acrobatics...',
-            status: 'pending',
-          },
+          { type: 'markdown_text', text: 'Hello.\nI have received the task. ' },
+          { type: 'markdown_text', text: 'This task appears manageable.\nThat is good.' },
+          { type: 'task_update', id: '001', title: 'Understanding the task...', status: 'in_progress', details: '- Identifying the goal\n- Identifying constraints' },
+          { type: 'task_update', id: '002', title: 'Performing acrobatics...', status: 'pending' },
         ],
       });
 
@@ -229,24 +49,9 @@ export const message = async ({ client, context, logger, message, say, setStatus
 
       await streamer.append({
         chunks: [
-          {
-            type: 'plan_update',
-            title: 'Adding the final pieces...',
-          },
-          {
-            type: 'task_update',
-            id: '001',
-            title: 'Understanding the task...',
-            status: 'complete',
-            details: '\n- Pretending this was obvious',
-            output: "We'll continue to ramble now",
-          },
-          {
-            type: 'task_update',
-            id: '002',
-            title: 'Performing acrobatics...',
-            status: 'in_progress',
-          },
+          { type: 'plan_update', title: 'Adding the final pieces...' },
+          { type: 'task_update', id: '001', title: 'Understanding the task...', status: 'complete', details: '\n- Pretending this was obvious', output: "We'll continue to ramble now" },
+          { type: 'task_update', id: '002', title: 'Performing acrobatics...', status: 'in_progress' },
         ],
       });
 
@@ -254,78 +59,33 @@ export const message = async ({ client, context, logger, message, say, setStatus
 
       await streamer.stop({
         chunks: [
-          {
-            type: 'plan_update',
-            title: 'Decided to put on a show',
-          },
-          {
-            type: 'task_update',
-            id: '002',
-            title: 'Performing acrobatics...',
-            status: 'complete',
-            details: '- Jumped atop ropes\n- Juggled bowling pins\n- Rode a single wheel too',
-          },
-          {
-            type: 'markdown_text',
-            text: 'The crowd appears to be astounded and applauds :popcorn:',
-          },
+          { type: 'plan_update', title: 'Decided to put on a show' },
+          { type: 'task_update', id: '002', title: 'Performing acrobatics...', status: 'complete', details: '- Jumped atop ropes\n- Juggled bowling pins\n- Rode a single wheel too' },
+          { type: 'markdown_text', text: 'The crowd appears to be astounded and applauds :popcorn:' },
         ],
         blocks: [feedbackBlock],
       });
-    } else if (message.text.toLowerCase().match(/personal\s*(laptop|device|computer)/)) {
-      await setStatus({ status: 'checking IT policy...' });
-
-      const policy = readFileSync('./knowledge/policies/personal-device-usage.md', 'utf-8');
-
-      const streamer = client.chatStream({
-        channel: channel,
-        recipient_team_id: teamId,
-        recipient_user_id: userId,
-        thread_ts: thread_ts,
-        task_display_mode: 'timeline',
-      });
-
-      const prompts = [
-        {
-          role: 'system',
-          content: `You are an IT support agent at Pronto. Answer the employee's question using ONLY the following internal policy document. Be helpful and concise.\n\n${policy}`,
-        },
-        {
-          role: 'user',
-          content: message.text,
-        },
-      ];
-
-      await callLLM(streamer, prompts);
-      await streamer.stop({ blocks: [feedbackBlock] });
-    } else {
-      // This second example shows a generated text response for the provided prompt
+    }
+    --- end commented out flow --- */
+    else {
       await setStatus({
         status: 'thinking...',
         loading_messages: [
           'Teaching the hamsters to type faster…',
           'Untangling the internet cables…',
           'Consulting the office goldfish…',
-          'Polishing up the response just for you…',
-          'Convincing the AI to stop overthinking…',
         ],
       });
 
       const streamer = client.chatStream({
-        channel: channel,
+        channel,
         recipient_team_id: teamId,
         recipient_user_id: userId,
-        thread_ts: thread_ts,
+        thread_ts,
         task_display_mode: 'timeline',
       });
 
-      const prompts = [
-        {
-          role: 'user',
-          content: message.text,
-        },
-      ];
-
+      const prompts = [{ role: 'user', content: message.text }];
       await callLLM(streamer, prompts);
       await streamer.stop({ blocks: [feedbackBlock] });
     }
@@ -334,3 +94,89 @@ export const message = async ({ client, context, logger, message, say, setStatus
     await say(`:warning: Something went wrong! (${e})`);
   }
 };
+
+async function handleGithubAccessRequest({ client, channel, thread_ts, userId, teamId, setStatus }) {
+  await setStatus({ status: "Looking up James's profile..." });
+  await sleep(800);
+  await setStatus({ status: 'Checking team membership...' });
+  await sleep(800);
+  await setStatus({ status: 'Identifying required repo permissions...' });
+  await sleep(800);
+
+  const streamer = client.chatStream({
+    channel,
+    recipient_team_id: teamId,
+    recipient_user_id: userId,
+    thread_ts,
+    task_display_mode: 'plan',
+  });
+
+  await streamer.append({
+    chunks: [
+      { type: 'plan_update', title: 'Processing GitHub access request...' },
+      { type: 'task_update', id: 'verify', title: 'Verify identity', status: 'in_progress' },
+      { type: 'task_update', id: 'grant', title: 'Grant repo access', status: 'pending' },
+    ],
+  });
+
+  await sleep(1200);
+
+  await streamer.append({
+    chunks: [
+      { type: 'task_update', id: 'verify', title: 'Verify identity', status: 'complete', output: 'Identity confirmed via SSO' },
+      { type: 'task_update', id: 'grant', title: 'Grant repo access', status: 'in_progress' },
+    ],
+  });
+
+  await sleep(800);
+
+  await streamer.stop({
+    chunks: [
+      { type: 'task_update', id: 'grant', title: 'Grant repo access', status: 'complete', output: 'Ready for confirmation' },
+      { type: 'markdown_text', text: "I've prepared your access request. Please review and confirm below." },
+    ],
+  });
+
+  await client.chat.postMessage({
+    channel,
+    thread_ts,
+    text: 'GitHub Access Request',
+    blocks: [
+      {
+        type: 'header',
+        text: { type: 'plain_text', text: '📂 GitHub Access Request' },
+      },
+      {
+        type: 'section',
+        fields: [
+          { type: 'mrkdwn', text: '*Org:*\n`acme-corp`' },
+          { type: 'mrkdwn', text: '*Role:*\nWrite' },
+          { type: 'mrkdwn', text: '*Team:*\n`@platform-eng`' },
+          { type: 'mrkdwn', text: '*Justification:*\nStandard access for new platform engineers' },
+        ],
+      },
+      { type: 'divider' },
+      {
+        type: 'actions',
+        elements: [
+          {
+            type: 'button',
+            text: { type: 'plain_text', text: '✅ Confirm' },
+            style: 'primary',
+            action_id: 'confirm_github_access',
+          },
+          {
+            type: 'button',
+            text: { type: 'plain_text', text: '✏️ Adjust' },
+            action_id: 'adjust_github_access',
+          },
+          {
+            type: 'button',
+            text: { type: 'plain_text', text: '❌ Cancel' },
+            action_id: 'cancel_github_access',
+          },
+        ],
+      },
+    ],
+  });
+}

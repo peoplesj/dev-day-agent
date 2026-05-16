@@ -2,7 +2,6 @@ import 'dotenv/config';
 import { App, LogLevel } from '@slack/bolt';
 import { registerListeners } from './listeners/index.js';
 
-// Initialize the Bolt app
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
   appToken: process.env.SLACK_APP_TOKEN,
@@ -13,10 +12,8 @@ const app = new App({
   },
 });
 
-// Register the action and event listeners
 registerListeners(app);
 
-// Start the Bolt app
 (async () => {
   try {
     await app.start();

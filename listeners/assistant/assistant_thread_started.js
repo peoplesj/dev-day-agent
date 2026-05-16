@@ -36,19 +36,23 @@ export const assistantThreadStarted = async ({ event, logger, say, setSuggestedP
      * @see {@link https://docs.slack.dev/reference/methods/assistant.threads.setSuggestedPrompts}
      */
     await setSuggestedPrompts({
-      title: 'Start with this suggested prompt:',
+      title: 'How can I help?',
       prompts: [
         {
-          title: 'Prompt a task with thinking steps',
-          message: 'Wonder a few deep thoughts.',
+          title: 'Request GitHub access',
+          message: 'Request GitHub access',
         },
         {
-          title: 'Reset my password',
-          message: 'I lost the sticky note that had my password written down. Help!',
+          title: 'Check my repo permissions',
+          message: 'Check my repo permissions',
         },
         {
-          title: 'Request Access',
-          message: 'I need to request AWS access for my project.',
+          title: 'Add a teammate to a repo',
+          message: 'Add a teammate to a repo',
+        },
+        {
+          title: 'Rotate my deploy key',
+          message: 'Rotate my deploy key',
         },
       ],
     });
