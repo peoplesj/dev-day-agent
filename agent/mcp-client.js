@@ -1,6 +1,5 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
 
 let mcpClient = null;
 let toolsCache = null;
@@ -8,23 +7,13 @@ let toolsCache = null;
 async function getMCPClient() {
   if (mcpClient) return mcpClient;
 
-  const authHeaders = { Authorization: `Bearer ${process.env.SLACK_USER_TOKEN}` };
+  const transport = new StreamableHTTPClientTransport(
+    new URL('https://mcp.slack.com/mcp'),
+    { requestInit: { headers: { Authorization: `Bearer ${process.env.SLACK_USER_TOKEN}` } } },
+  );
+
   const client = new Client({ name: 'dev-day-agent', version: '1.0.0' });
-
-  try {
-    const transport = new StreamableHTTPClientTransport(
-      new URL('https://mcp.slack.com/mcp'),
-      { requestInit: { headers: authHeaders } },
-    );
-    await client.connect(transport);
-  } catch {
-    const transport = new SSEClientTransport(
-      new URL('https://mcp.slack.com/sse'),
-      { requestInit: { headers: authHeaders } },
-    );
-    await client.connect(transport);
-  }
-
+  await client.connect(transport);
   mcpClient = client;
   return mcpClient;
 }

@@ -4,7 +4,7 @@ import { feedbackBlock } from '../views/feedback_block.js';
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const SYSTEM_PROMPT = `You are an IT support agent for Acme Corp, embedded in Slack. You help employees by reading relevant Slack channels and threads to find answers.
+const SYSTEM_PROMPT = `You are an IT support agent for Pronto, embedded in Slack. You help employees by reading relevant Slack channels and threads to find answers.
 
 When a user asks a question about what's happening in Slack channels or needs information from conversations:
 1. Use slack_search_channels to find relevant channels if you don't know the channel ID
