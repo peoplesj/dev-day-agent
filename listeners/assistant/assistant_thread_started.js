@@ -39,20 +39,20 @@ export const assistantThreadStarted = async ({ event, logger, say, setSuggestedP
       title: 'How can I help?',
       prompts: [
         {
+          title: "What's happening in #help-it?",
+          message: 'What are the recent issues people are reporting in #help-it?',
+        },
+        {
           title: 'Request GitHub access',
           message: 'Request GitHub access',
         },
         {
-          title: 'Check my repo permissions',
-          message: 'Check my repo permissions',
+          title: 'Summarize #engineering updates',
+          message: 'Give me a summary of what was discussed in #engineering this week',
         },
         {
-          title: 'Add a teammate to a repo',
-          message: 'Add a teammate to a repo',
-        },
-        {
-          title: 'Rotate my deploy key',
-          message: 'Rotate my deploy key',
+          title: 'Find VPN troubleshooting info',
+          message: 'Search Slack for any recent VPN troubleshooting advice',
         },
       ],
     });

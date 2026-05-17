@@ -1,7 +1,20 @@
 import { callLLM } from '../../agent/llm-caller.js';
+import { getSlackTools } from '../../agent/tools/slack-mcp-tools.js';
 import { feedbackBlock } from '../views/feedback_block.js';
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const SYSTEM_PROMPT = `You are an IT support agent for Acme Corp, embedded in Slack. You help employees by reading relevant Slack channels and threads to find answers.
+
+When a user asks a question about what's happening in Slack channels or needs information from conversations:
+1. Use slack_search_channels to find relevant channels if you don't know the channel ID
+2. Use slack_search_public to find relevant messages matching their question
+3. Use slack_read_channel to read the most recent messages from a channel (limit to 10 messages max)
+4. Use slack_read_thread to dive into specific threads for more detail
+
+When reading channels, always request at most 10 messages. Keep searches focused and concise.
+Always cite which channel and who said what. Format responses with markdown.
+Be helpful, concise, and reference specific messages you found.`;
 
 export const message = async ({ client, context, logger, message, say, setStatus, getThreadContext }) => {
   if (!('text' in message) || !('thread_ts' in message) || !message.text || !message.thread_ts) {
@@ -10,7 +23,8 @@ export const message = async ({ client, context, logger, message, say, setStatus
 
   try {
     const { channel, thread_ts } = message;
-    const { userId, teamId } = context;
+    const teamId = context.teamId || message.team;
+    const userId = context.userId || message.user;
 
     if (message.text.toLowerCase().includes('github access')) {
       await handleGithubAccessRequest({ client, channel, thread_ts, userId, teamId, setStatus });
@@ -82,11 +96,12 @@ export const message = async ({ client, context, logger, message, say, setStatus
         recipient_team_id: teamId,
         recipient_user_id: userId,
         thread_ts,
-        task_display_mode: 'timeline',
+        task_display_mode: 'plan',
       });
 
+      const tools = await getSlackTools();
       const prompts = [{ role: 'user', content: message.text }];
-      await callLLM(streamer, prompts);
+      await callLLM(streamer, prompts, { tools, systemPrompt: SYSTEM_PROMPT });
       await streamer.stop({ blocks: [feedbackBlock] });
     }
   } catch (e) {

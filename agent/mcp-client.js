@@ -1,44 +1,48 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-
-const MCP_SERVER_URL = 'https://mcp.slack.com/sse';
+import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
 
 let mcpClient = null;
+let toolsCache = null;
 
 async function getMCPClient() {
   if (mcpClient) return mcpClient;
 
-  const transport = new StreamableHTTPClientTransport(new URL(MCP_SERVER_URL), {
-    requestInit: {
-      headers: {
-        Authorization: `Bearer ${process.env.SLACK_USER_TOKEN}`,
-      },
-    },
-  });
+  const authHeaders = { Authorization: `Bearer ${process.env.SLACK_USER_TOKEN}` };
+  const client = new Client({ name: 'dev-day-agent', version: '1.0.0' });
 
-  mcpClient = new Client({
-    name: 'dev-day-agent',
-    version: '1.0.0',
-  });
+  try {
+    const transport = new StreamableHTTPClientTransport(
+      new URL('https://mcp.slack.com/mcp'),
+      { requestInit: { headers: authHeaders } },
+    );
+    await client.connect(transport);
+  } catch {
+    const transport = new SSEClientTransport(
+      new URL('https://mcp.slack.com/sse'),
+      { requestInit: { headers: authHeaders } },
+    );
+    await client.connect(transport);
+  }
 
-  await mcpClient.connect(transport);
+  mcpClient = client;
   return mcpClient;
 }
 
-export async function readSOPCanvas() {
+export async function listMCPTools() {
+  if (toolsCache) return toolsCache;
   const client = await getMCPClient();
+  const result = await client.listTools();
+  toolsCache = result.tools;
+  return toolsCache;
+}
 
-  const result = await client.callTool({
-    name: 'slack_read_canvas',
-    arguments: {
-      canvas_id: process.env.SOP_CANVAS_ID,
-    },
-  });
-
-  const content = result.content
+export async function executeMCPTool(name, args) {
+  const client = await getMCPClient();
+  const result = await client.callTool({ name, arguments: args });
+  return result.content
     .filter((c) => c.type === 'text')
     .map((c) => c.text)
     .join('\n');
-
-  return content;
 }
+

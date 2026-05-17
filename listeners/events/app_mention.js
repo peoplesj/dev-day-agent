@@ -1,5 +1,18 @@
 import { callLLM } from '../../agent/llm-caller.js';
+import { getSlackTools } from '../../agent/tools/slack-mcp-tools.js';
 import { feedbackBlock } from '../views/feedback_block.js';
+
+const SYSTEM_PROMPT = `You are an IT support agent for Acme Corp, embedded in Slack. You help employees by reading relevant Slack channels and threads to find answers.
+
+When a user asks a question about what's happening in Slack channels or needs information from conversations:
+1. Use slack_search_channels to find relevant channels if you don't know the channel ID
+2. Use slack_search_public to find relevant messages matching their question
+3. Use slack_read_channel to read the most recent messages from a channel (limit to 10 messages max)
+4. Use slack_read_thread to dive into specific threads for more detail
+
+When reading channels, always request at most 10 messages. Keep searches focused and concise.
+Always cite which channel and who said what. Format responses with markdown.
+Be helpful, concise, and reference specific messages you found.`;
 
 /**
  * Handles the event when the app is mentioned in a Slack conversation
@@ -137,8 +150,10 @@ export const appMentionCallback = async ({ event, client, logger, say }) => {
       recipient_team_id: team,
       recipient_user_id: user,
       thread_ts: thread_ts,
+      task_display_mode: 'plan',
     });
 
+    const tools = await getSlackTools();
     const prompts = [
       {
         role: 'user',
@@ -146,7 +161,7 @@ export const appMentionCallback = async ({ event, client, logger, say }) => {
       },
     ];
 
-    await callLLM(streamer, prompts);
+    await callLLM(streamer, prompts, { tools, systemPrompt: SYSTEM_PROMPT });
 
     await streamer.stop({ blocks: [feedbackBlock] });
   } catch (e) {

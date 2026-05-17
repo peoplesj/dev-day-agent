@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import { App, LogLevel } from '@slack/bolt';
 import { registerListeners } from './listeners/index.js';
+import { listMCPTools } from './agent/mcp-client.js';
 
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
@@ -18,6 +19,7 @@ registerListeners(app);
   try {
     await app.start();
     app.logger.info('⚡️ Bolt app is running!');
+    listMCPTools().then(() => app.logger.info('MCP tools warmed up')).catch(() => {});
   } catch (error) {
     app.logger.error('Failed to start the app', error);
   }
