@@ -23,7 +23,7 @@ export async function vpnMessageCallback({ message, client, context }) {
 
   await streamer.append({
     chunks: [
-      { type: 'markdown_text', text: '### What\'s happening\n\n> "Confirmed — the Cisco AnyConnect cache corruption is back. We rolled out a fix in v4.10.08 but anyone still on v4.10.07 is hitting the 10-minute disconnect loop."\n> — Maya Chen, `#help-it`, May 12\n\n**You\'re hitting this if:** you installed AnyConnect before May 9, and your sessions drop every 8–12 minutes.\n\n' },
+      { type: 'markdown_text', text: '### What\'s happening\n\n> "Confirmed — the Cisco AnyConnect cache corruption is back. We rolled out a fix in v4.10.08 but anyone still on v4.10.07 is hitting the 10-minute disconnect loop." <https://pronto2.slack.com/archives/C0B3XAYDK1V/p1779133031451979|[1]>\n> — Maya Chen, `#help-it`, May 12\n\n**You\'re hitting this if:** you installed AnyConnect before May 9, and your sessions drop every 8–12 minutes.\n\n' },
     ],
   });
 
@@ -39,7 +39,7 @@ export async function vpnMessageCallback({ message, client, context }) {
 
   await streamer.append({
     chunks: [
-      { type: 'markdown_text', text: '### Incident timeline\n\n| When it started | Affected version | Status |\n|---|---|---|\n| Mon May 12, 9 AM | AnyConnect v4.10.07 | 🔴 Active |\n| Tue May 13, 2 PM | AnyConnect v4.10.08+ | 🟢 Fixed |\n| Previous incident | v4.9.x (March 2026) | 🟢 Resolved |\n\n' },
+      { type: 'markdown_text', text: '### Incident timeline\n\n| When it started | Affected version | Status |\n|---|---|---|\n| Tue May 12, 9 AM | AnyConnect v4.10.07 | 🔴 Active |\n| Wed May 13, 2 PM | AnyConnect v4.10.08+ | 🟢 Fixed |\n| Previous incident | v4.9.x (March 2026) | 🟢 Resolved |\n\n' },
     ],
   });
 

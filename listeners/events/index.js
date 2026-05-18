@@ -3,5 +3,5 @@ import { vpnMessageCallback } from './channel_message.js';
 
 export const register = (app) => {
   app.event('app_mention', appMentionCallback);
-  app.message('vpn', vpnMessageCallback);
+  app.message(/vpn/i, vpnMessageCallback);
 };

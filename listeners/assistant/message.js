@@ -112,11 +112,11 @@ export const message = async ({ client, context, logger, message, say, setStatus
 
 async function handleGithubAccessRequest({ client, channel, thread_ts, userId, teamId, setStatus }) {
   await setStatus({ status: "Looking up James's profile..." });
-  await sleep(800);
+  await sleep(500);
   await setStatus({ status: 'Checking team membership...' });
-  await sleep(800);
+  await sleep(500);
   await setStatus({ status: 'Identifying required repo permissions...' });
-  await sleep(800);
+  await sleep(500);
 
   const streamer = client.chatStream({
     channel,
@@ -134,7 +134,7 @@ async function handleGithubAccessRequest({ client, channel, thread_ts, userId, t
     ],
   });
 
-  await sleep(1200);
+  await sleep(500);
 
   await streamer.append({
     chunks: [
@@ -143,7 +143,7 @@ async function handleGithubAccessRequest({ client, channel, thread_ts, userId, t
     ],
   });
 
-  await sleep(800);
+  await sleep(500);
 
   await streamer.stop({
     chunks: [
